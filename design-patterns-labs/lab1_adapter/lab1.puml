@@ -1,52 +1,72 @@
-@startuml
-interface FileWriter <<Target>> {
-    +write(filename: string, rows: array): bool
+@startuml lab1_adapter_uml
+title Lab 1 - Adapter Pattern: File Export (CSV / JSON / Text / XML)
+
+interface FileWriter <<interface>> {
+  + write(filename: string, rows: array): bool
 }
 
-class ReportExporter <<Client>> {
-    -writer: FileWriter
-    +export(filename: string, rows: array): void
+class ReportExporter {
+  - writer: FileWriter
+  + export(filename: string, rows: array): void
 }
 
-ReportExporter o--> FileWriter : uses
-
-class CsvLibrary <<Adaptee>> {
-    +writeCsv(path: string, rows: array): bool
-}
-class JsonLibrary <<Adaptee>> {
-    +saveJson(path: string, payload: mixed): bool
-}
-class TextLibrary <<Adaptee>> {
-    +appendLine(path: string, line: string): bool
-}
-class XmlLibrary <<Adaptee>> {
-    +writeXml(path: string, data: array): bool
+class CsvFileAdapter {
+  - csv: CsvLibrary
+  + write(filename: string, rows: array): bool
 }
 
-class CsvFileAdapter <<Adapter>> {
-    -csv: CsvLibrary
-    +write(filename: string, rows: array): bool
-}
-class JsonFileAdapter <<Adapter>> {
-    -json: JsonLibrary
-    +write(filename: string, rows: array): bool
-}
-class TextFileAdapter <<Adapter>> {
-    -text: TextLibrary
-    +write(filename: string, rows: array): bool
-}
-class XmlFileAdapter <<Adapter>> {
-    -xml: XmlLibrary
-    +write(filename: string, rows: array): bool
+class JsonFileAdapter {
+  - json: JsonLibrary
+  + write(filename: string, rows: array): bool
 }
 
+class TextFileAdapter {
+  - text: TextLibrary
+  + write(filename: string, rows: array): bool
+}
+
+class XmlWriterAdapter {
+  - xml: XmlLibrary
+  + write(filename: string, rows: array): bool
+}
+
+class CsvLibrary {
+  + writeCsv(path: string, rows: array): bool
+}
+
+class JsonLibrary {
+  + saveJson(path: string, payload: mixed): bool
+}
+
+class TextLibrary {
+  + appendLine(path: string, line: string): bool
+}
+
+class XmlLibrary {
+  + writeXmlDocument(path: string, rows: array): bool
+}
+
+' Client depends only on the Target abstraction (composition)
+ReportExporter o-- FileWriter : uses >
+
+' Adapters implement the Target (dashed, hollow triangle)
 CsvFileAdapter ..|> FileWriter
 JsonFileAdapter ..|> FileWriter
 TextFileAdapter ..|> FileWriter
-XmlFileAdapter ..|> FileWriter
+XmlWriterAdapter ..|> FileWriter
 
-CsvFileAdapter *--> CsvLibrary : translates write() to writeCsv()
-JsonFileAdapter *--> JsonLibrary : translates write() to saveJson()
-TextFileAdapter *--> TextLibrary : translates write() to appendLine()
-XmlFileAdapter *--> XmlLibrary : translates write() to writeXml()
+' Adapters wrap (compose) their incompatible Adaptee - translation happens
+' inside each adapter's write() method, which calls the adaptee's real method name.
+CsvFileAdapter *-- CsvLibrary : translates write()\n-> writeCsv()
+JsonFileAdapter *-- JsonLibrary : translates write()\n-> saveJson()
+TextFileAdapter *-- TextLibrary : translates write()\n-> appendLine() per row
+XmlWriterAdapter *-- XmlLibrary : translates write()\n-> writeXmlDocument()
+
+note right of XmlWriterAdapter
+  4th adapter added later.
+  ReportExporter, FileWriter, and
+  every existing adapter/class are
+  unchanged (Open/Closed Principle).
+end note
+
 @enduml
