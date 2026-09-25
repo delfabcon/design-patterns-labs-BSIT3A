@@ -1,0 +1,52 @@
+@startuml
+interface FileWriter <<Target>> {
+    +write(filename: string, rows: array): bool
+}
+
+class ReportExporter <<Client>> {
+    -writer: FileWriter
+    +export(filename: string, rows: array): void
+}
+
+ReportExporter o--> FileWriter : uses
+
+class CsvLibrary <<Adaptee>> {
+    +writeCsv(path: string, rows: array): bool
+}
+class JsonLibrary <<Adaptee>> {
+    +saveJson(path: string, payload: mixed): bool
+}
+class TextLibrary <<Adaptee>> {
+    +appendLine(path: string, line: string): bool
+}
+class XmlLibrary <<Adaptee>> {
+    +writeXml(path: string, data: array): bool
+}
+
+class CsvFileAdapter <<Adapter>> {
+    -csv: CsvLibrary
+    +write(filename: string, rows: array): bool
+}
+class JsonFileAdapter <<Adapter>> {
+    -json: JsonLibrary
+    +write(filename: string, rows: array): bool
+}
+class TextFileAdapter <<Adapter>> {
+    -text: TextLibrary
+    +write(filename: string, rows: array): bool
+}
+class XmlFileAdapter <<Adapter>> {
+    -xml: XmlLibrary
+    +write(filename: string, rows: array): bool
+}
+
+CsvFileAdapter ..|> FileWriter
+JsonFileAdapter ..|> FileWriter
+TextFileAdapter ..|> FileWriter
+XmlFileAdapter ..|> FileWriter
+
+CsvFileAdapter *--> CsvLibrary : translates write() to writeCsv()
+JsonFileAdapter *--> JsonLibrary : translates write() to saveJson()
+TextFileAdapter *--> TextLibrary : translates write() to appendLine()
+XmlFileAdapter *--> XmlLibrary : translates write() to writeXml()
+@enduml

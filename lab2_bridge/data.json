@@ -1,0 +1,6 @@
+[
+  { "userId": 1, "id": 1, "title": "Time-in 08:01:23 AM" },
+  { "userId": 1, "id": 2, "title": "Time-out 12:00:12 PM" },
+  { "userId": 1, "id": 3, "title": "Time-in 01:00:31 PM" },
+  { "userId": 1, "id": 4, "title": "Time-out 05:02:08 PM" }
+]
