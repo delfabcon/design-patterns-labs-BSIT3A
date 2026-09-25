@@ -1,0 +1,85 @@
+@startuml lab2_bridge_uml
+title Bridge Pattern — TimesFormatter x DataSource x Compressor
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor white
+skinparam class {
+    BackgroundColor<<Abstraction>> #DCEEFB
+    BackgroundColor<<Concrete>> #E8F5E9
+    BackgroundColor<<ImplementorA>> #FFF3CD
+    BackgroundColor<<ImplementorAConcrete>> #FDEBD0
+    BackgroundColor<<ImplementorB>> #F8D7DA
+    BackgroundColor<<ImplementorBConcrete>> #FBE4E6
+    BorderColor #334155
+    ArrowColor #334155
+}
+
+abstract class TimesFormatter <<Abstraction>> {
+    + source: DataSource
+    + compressor: Compressor
+    + __construct(source, compressor)
+    + setCompressor(compressor): void
+    + generate(title): string
+    # {abstract} toText(records): string
+}
+
+class AttendanceTimesFormatter <<Concrete>> {
+    + toText(records): string
+}
+
+class TimesheetJsonFormatter <<Concrete>> {
+    + toText(records): string
+}
+
+interface DataSource <<ImplementorA>> {
+    + fetch(): array
+}
+
+class ApiDataSource <<ImplementorAConcrete>> {
+    + fetch(): array
+}
+
+class FileDataSource <<ImplementorAConcrete>> {
+    + fetch(): array
+}
+
+interface Compressor <<ImplementorB>> {
+    + compress(content): string
+    + isCompressed(): bool
+}
+
+class GzipCompressor <<ImplementorBConcrete>> {
+    + compress(content): string
+    + isCompressed(): bool
+}
+
+class NoneCompressor <<ImplementorBConcrete>> {
+    + compress(content): string
+    + isCompressed(): bool
+}
+
+' Abstraction hierarchy (varies independently)
+TimesFormatter <|-- AttendanceTimesFormatter
+TimesFormatter <|-- TimesheetJsonFormatter
+
+' Implementor A hierarchy (varies independently)
+DataSource <|.. ApiDataSource
+DataSource <|.. FileDataSource
+
+' Implementor B hierarchy (varies independently)
+Compressor <|.. GzipCompressor
+Compressor <|.. NoneCompressor
+
+' The Bridge: composition, not inheritance
+TimesFormatter *--> "1" DataSource : bridges to
+TimesFormatter *--> "1" Compressor : bridges to
+
+note right of TimesFormatter
+  Bridge pattern: TimesFormatter (Abstraction)
+  holds a DataSource and a Compressor by
+  composition. Both hierarchies vary
+  independently of each other and of
+  TimesFormatter's own subclasses.
+end note
+
+@enduml
