@@ -1,0 +1,81 @@
+WITH Decorator (GOOD - TODOs completed):
+(offline: using OfflineHttpClient sample data)
+
+=== 1. Starter demo: Caching(Logging(Base)) ===
+[Log] GET https://jsonplaceholder.typicode.com/posts/1
+[Log] Got 156 bytes
+[Cache] Stored https://jsonplaceholder.typicode.com/posts/1
+{"userId": 1, "id": 1, "title": "sunt aut facere repellat pr...
+[Cache] Hit https://jsonplaceholder.typicode.com/posts/1
+{"userId": 1, "id": 1, "title": "sunt aut facere repellat pr...
+
+=== 2. RetryDecorator: base fails 2 times, then works ===
+[Retry] Attempt 1 failed: Simulated timeout #1
+[Retry] Attempt 2 failed: Simulated timeout #2
+{"userId": 1, "id": 1, "title": "sunt aut facere repellat pr...
+
+--- RetryDecorator: base fails 5 times (gives up after 3) ---
+[Retry] Attempt 1 failed: Simulated timeout #1
+[Retry] Attempt 2 failed: Simulated timeout #2
+[Retry] Attempt 3 failed: Simulated timeout #3
+Final error rethrown to caller: Simulated timeout #3
+
+=== 3. TokenCounterDecorator ===
+[Tokens] 19
+{"userId": 1, "id": 1, "title": "sunt aut facere repellat pr...
+
+=== 4. ORDER MATTERS ===
+
+--- A) Logging(Caching(Base)): Logging is OUTSIDE ---
+call 1:
+[Log] GET https://jsonplaceholder.typicode.com/posts/1
+[Cache] Stored https://jsonplaceholder.typicode.com/posts/1
+[Log] Got 156 bytes
+call 2:
+[Log] GET https://jsonplaceholder.typicode.com/posts/1
+[Cache] Hit https://jsonplaceholder.typicode.com/posts/1
+[Log] Got 156 bytes
+=> [Log] prints on BOTH calls, even the cache hit (every request is logged).
+
+--- B) Caching(Logging(Base)): Caching is OUTSIDE ---
+call 1:
+[Log] GET https://jsonplaceholder.typicode.com/posts/1
+[Log] Got 156 bytes
+[Cache] Stored https://jsonplaceholder.typicode.com/posts/1
+call 2:
+[Cache] Hit https://jsonplaceholder.typicode.com/posts/1
+=> [Log] prints only on call 1. The cache answers call 2 before Logging is reached
+   (only real network calls are logged).
+
+=== 5. Full chain from the UML: Retry(Caching(Logging(Base))) ===
+[Log] GET https://jsonplaceholder.typicode.com/posts/1
+[Log] Got 156 bytes
+[Cache] Stored https://jsonplaceholder.typicode.com/posts/1
+[Cache] Hit https://jsonplaceholder.typicode.com/posts/1
+
+=== 6. 4 decorators => 16 combos, still only 4 decorator classes + 1 base ===
+   1. BaseHttpClient only                      -> 156 bytes OK
+   2. Logging                                  -> 156 bytes OK
+   3. Caching                                  -> 156 bytes OK
+   4. Logging + Caching                        -> 156 bytes OK
+   5. Retry                                    -> 156 bytes OK
+   6. Logging + Retry                          -> 156 bytes OK
+   7. Caching + Retry                          -> 156 bytes OK
+   8. Logging + Caching + Retry                -> 156 bytes OK
+   9. TokenCounter                             -> 156 bytes OK
+  10. Logging + TokenCounter                   -> 156 bytes OK
+  11. Caching + TokenCounter                   -> 156 bytes OK
+  12. Logging + Caching + TokenCounter         -> 156 bytes OK
+  13. Retry + TokenCounter                     -> 156 bytes OK
+  14. Logging + Retry + TokenCounter           -> 156 bytes OK
+  15. Caching + Retry + TokenCounter           -> 156 bytes OK
+  16. Logging + Caching + Retry + TokenCounter -> 156 bytes OK
+  Total: 16 working combinations, 0 new classes needed.
+  (With inheritance this would need 2^4 = 16 separate classes.)
+
+=== 7. Extensibility: new TimingDecorator (1 class, nothing else edited) ===
+[Log] GET https://jsonplaceholder.typicode.com/posts/1
+[Log] Got 156 bytes
+[Tokens] 19
+[Timing] 0 ms
+{"userId": 1, "id": 1, "title": "sunt aut facere repellat pr...

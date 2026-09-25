@@ -1,0 +1,85 @@
+@startuml lab3_composite_uml
+' Lab 3 - Composite: Forum (left) and RAG document tree (right)
+' Render at https://www.plantuml.com/plantuml or with the PlantUML plugin in VS Code / draw.io
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+package "Forum variant" {
+  interface ForumComponent <<Component>> {
+    + display(depth: int = 0): void
+  }
+
+  class Post <<Leaf>> {
+    - author: string
+    - message: string
+    + display(depth: int = 0): void
+  }
+
+  class Thread <<Composite>> {
+    - title: string
+    - children: ForumComponent[]
+    + add(c: ForumComponent): void
+    + display(depth: int = 0): void
+    + {static} fromApi(postId: int): Thread
+  }
+
+  class Bundle <<Leaf, NEW>> {
+    - name: string
+    - items: string[]
+    + display(depth: int = 0): void
+  }
+
+  ForumComponent <|.. Post
+  ForumComponent <|.. Thread
+  ForumComponent <|.. Bundle
+  Thread *-- "1..*" ForumComponent : children
+
+  note bottom of Bundle
+    Extensibility demo: 1 new class.
+    Thread and client code unchanged.
+  end note
+}
+
+package "RAG variant" {
+  interface TextComponent <<Component>> {
+    + getText(): string
+    + embed(): array
+  }
+
+  class Chunk <<Leaf>> {
+    - text: string
+    + getText(): string
+    + embed(): array
+  }
+
+  abstract class TextComposite <<Composite>> {
+    # title: string
+    # children: TextComponent[]
+    + add(c: TextComponent): static
+    + getText(): string
+    + embed(): array
+    # {abstract} heading(): string
+  }
+
+  class Section <<Composite>> {
+    # heading(): string
+  }
+
+  class Document <<Composite>> {
+    # heading(): string
+  }
+
+  TextComponent <|.. Chunk
+  TextComponent <|.. TextComposite
+  TextComposite <|-- Section
+  TextComposite <|-- Document
+  TextComposite *-- "1..*" TextComponent : children
+}
+
+class Client {
+  renderForum(root: ForumComponent)
+}
+Client ..> ForumComponent : uses (no instanceof)
+Client ..> TextComponent : uses
+@enduml

@@ -1,0 +1,83 @@
+@startuml lab4_decorator_uml
+' Lab 4 - Decorator: HTTP client middleware pipeline
+' Render at https://www.plantuml.com/plantuml or with the PlantUML plugin in VS Code / draw.io
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class Client {
+  $client->get($url)
+}
+
+interface HttpClient <<Component>> {
+  + get(url: string): string
+}
+
+class BaseHttpClient <<ConcreteComponent>> {
+  + get(url: string): string
+}
+
+class OfflineHttpClient <<ConcreteComponent (fallback)>> {
+  + get(url: string): string
+}
+
+class FlakyHttpClient <<test helper>> {
+  - calls: int
+  - failuresBeforeSuccess: int
+  + get(url: string): string
+}
+
+abstract class HttpDecorator <<Decorator>> {
+  # wrapped: HttpClient
+  + __construct(wrapped: HttpClient)
+}
+
+class LoggingDecorator <<ConcreteDecorator>> {
+  + get(url: string): string
+}
+
+class CachingDecorator <<ConcreteDecorator>> {
+  - cache: array
+  + get(url: string): string
+}
+
+class RetryDecorator <<ConcreteDecorator>> {
+  - MAX_TRIES = 3
+  + get(url: string): string
+}
+
+class TokenCounterDecorator <<ConcreteDecorator>> {
+  + get(url: string): string
+}
+
+class TimingDecorator <<NEW - 1 class>> #E8F5E9 {
+  + get(url: string): string
+}
+
+Client ..> HttpClient : uses
+HttpClient <|.. BaseHttpClient
+HttpClient <|.. OfflineHttpClient
+HttpClient <|.. FlakyHttpClient
+HttpClient <|.. HttpDecorator
+HttpDecorator o--> "1" HttpClient : wrapped
+
+HttpDecorator <|-- LoggingDecorator
+HttpDecorator <|-- CachingDecorator
+HttpDecorator <|-- RetryDecorator
+HttpDecorator <|-- TokenCounterDecorator
+HttpDecorator <|-- TimingDecorator
+
+note bottom of RetryDecorator
+  Wrapping chain:
+  Retry( Caching( Logging( BaseHttpClient ) ) )
+
+  ORDER MATTERS:
+  Logging(Caching(Base)) -> [Log] on every call, even cache hits
+  Caching(Logging(Base)) -> [Log] only on a cache miss
+end note
+
+note bottom of TimingDecorator
+  Extensibility demo:
+  1 new class, nothing else edited.
+  4 decorators = 16 combos at runtime.
+end note
+@enduml

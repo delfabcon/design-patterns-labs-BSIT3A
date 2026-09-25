@@ -1,0 +1,40 @@
+WITH Composite (GOOD - TODOs completed):
+
+=== 1. Forum tree (Thread::display loop fixed) ===
+(offline: using saved sample data for https://jsonplaceholder.typicode.com/posts/1)
+(offline: using saved sample data for https://jsonplaceholder.typicode.com/posts/1/comments)
++ Thread: sunt aut facere repellat provident occaecati excepturi optio reprehenderit
+  - Post by Author 1: quia et suscipit suscipit recusandae con...
+  + Thread: Replies
+    - Post by Eliseo@gardner.biz: laudantium enim quasi est quid...
+    - Post by Jayne_Kuhic@sydney.com: est natus enim nihil est dolor...
+
+=== 2. Extensibility: new Bundle leaf (1 class, no client change) ===
++ Thread: sunt aut facere repellat provident occaecati excepturi optio reprehenderit
+  - Post by Author 1: quia et suscipit suscipit recusandae con...
+  + Thread: Replies
+    - Post by Eliseo@gardner.biz: laudantium enim quasi est quid...
+    - Post by Jayne_Kuhic@sydney.com: est natus enim nihil est dolor...
+  * Bundle: Welcome Pack (3 items)
+      > Forum rules
+      > FAQ link
+      > Intro template
+
+=== 3. RAG variant: Document -> Section -> Chunk ===
+--- getText() on the whole document ---
+# IPT Lab Notes
+## Composite
+Compose objects into tree structures.
+Leaf and composite share one interface.
+## Decorator
+Attach responsibilities dynamically.
+## Example
+Logging wraps Caching wraps Base client.
+--- embed() on the whole document ---
+  chunk 0 => [5, 37, 0.647]
+  chunk 1 => [6, 39, 0.921]
+  chunk 2 => [3, 36, 0.756]
+  chunk 3 => [6, 40, 0.973]
+  total vectors: 4
+
+Done: one display()/getText()/embed() call works on any node, no instanceof.
